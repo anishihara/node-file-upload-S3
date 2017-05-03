@@ -9,8 +9,15 @@
 
     <div class="container">
         <section>
+        <h2>Folders</h2>
+            <div class="folders">
+                <ul>
+                </ul>
+            </div>
+        </section>
+        <section>
         <h2>Upload file</h2>
-            <form action='/upload' method='post' enctype='multipart/form-data'>
+            <form id='uploadForm' action='/upload' method='post' enctype='multipart/form-data'>
                 <div class="input-group col-md-4">
                     <input type='file' name='file' class="form-control" />
                     <div class="input-group-btn">
@@ -40,11 +47,32 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script>
         $(document).ready(function() {
-            $.get("/files", function(data) {
+            const getParameterByName = (name, url) => {
+                if (!url) url = window.location.href;
+                const formattedName = name.replace(/[\[\]]/g, "\\$&");
+                const regex = new RegExp("[?&]" + formattedName + "(=([^&#]*)|&|#|$)");
+                const results = regex.exec(url);
+                if (!results) return null;
+                if (!results[2]) return '';
+                return decodeURIComponent(results[2].replace(/\+/g, " "));
+            }
+            const path = getParameterByName('path');
+            $('#uploadForm').attr('action', '/upload?path='+path);
+            $.get("/files?path="+path, function(data) {
                 for (var i = 0; i < data.length; i++) {
-                    var file = data[i];
-                    var element = "<li><a href='/files" + file + "'>" + data[i] + "</a>";
+                    const displayfile = data[i];
+                    const filepathSplitted = data[i].split('/');
+                    const file = filepathSplitted[filepathSplitted.length-1];
+                    const element = "<li><a href='/file?file=" + encodeURIComponent(file) +'&path='+path + "'>" + displayfile + "</a>";
                     $(".files ul").append(element);
+                }
+            });
+
+            $.get('/folders',function(data){
+                for (var i = 0; i < data.length; i++) {
+                    const folder = data[i];
+                    const element = "<li><a href='/?path=" + folder + "'>" + folder + "</a>";
+                    $(".folders ul").append(element);
                 }
             });
         });
